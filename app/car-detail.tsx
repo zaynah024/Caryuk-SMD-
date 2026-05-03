@@ -55,8 +55,8 @@ export default function CarDetailScreen() {
     return `$${(price / 1000).toFixed(0)}K`;
   };
 
-  const isFavorited = car && profile?.favorites?.includes(car.id);
-  const isInCart = car && profile?.cart?.includes(car.id);
+  const isFavorited = car?.id && profile?.favorites?.includes(car.id);
+  const isInCart = car?.id && profile?.cart?.includes(car.id);
 
   const SPECS = [
     { id: '1', label: '5000km', icon: 'speedometer' },
