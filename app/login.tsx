@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Login Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -24,38 +43,27 @@ export default function LoginScreen() {
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-            <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
             <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
+            <TextInput 
               style={styles.input}
               placeholder="Email"
+              placeholderTextColor="#999"
               value={email}
               onChangeText={setEmail}
-              keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#999"
+              keyboardType="email-address"
             />
           </View>
 
           <View style={styles.inputContainer}>
             <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
+            <TextInput 
               style={styles.input}
               placeholder="Password"
+              placeholderTextColor="#999"
+              secureTextEntry
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
-              placeholderTextColor="#999"
             />
           </View>
 
@@ -64,10 +72,15 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={() => router.replace('/(tabs)')}
+            style={[styles.loginButton, loading && { opacity: 0.7 }]} 
+            onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.loginButtonText}>Login</Text>
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.signupContainer}>
@@ -121,6 +134,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+    fontFamily: 'OpenSans_400Regular',
   },
   form: {
     width: '100%',
@@ -144,6 +158,7 @@ const styles = StyleSheet.create({
     height: '100%',
     color: '#000',
     fontSize: 16,
+    fontFamily: 'OpenSans_400Regular',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -152,6 +167,7 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: '#999',
     fontSize: 14,
+    fontFamily: 'OpenSans_400Regular',
   },
   loginButton: {
     backgroundColor: '#F2B705',
@@ -180,11 +196,12 @@ const styles = StyleSheet.create({
   noAccountText: {
     color: '#999',
     fontSize: 14,
+    fontFamily: 'OpenSans_400Regular',
   },
   signupLinkText: {
     color: '#333',
-    fontWeight: 'bold',
     fontSize: 14,
+    fontFamily: 'OpenSans_700Bold',
   },
   socialSection: {
     alignItems: 'center',
@@ -193,6 +210,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 20,
     fontSize: 14,
+    fontFamily: 'OpenSans_400Regular',
   },
   socialButtons: {
     flexDirection: 'row',
@@ -209,7 +227,7 @@ const styles = StyleSheet.create({
   },
   socialText: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'OpenSans_700Bold',
     color: '#000',
   },
 });

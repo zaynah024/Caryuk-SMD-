@@ -1,107 +1,117 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
 export default function SignupScreen() {
   const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const handleSignup = async () => {
+    if (!fullName || !email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const user = userCredential.user;
+
+      // Store additional user data in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        fullName,
+        email: email.trim(),
+        createdAt: new Date().toISOString(),
+        favorites: [],
+      });
+
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Signup Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
+        style={styles.inner}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <Text style={styles.welcomeText}>Create Account</Text>
-            <Text style={styles.subText}>Start your journey with Caryuk.{"\n"}The smartest choice for your next car.</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.welcomeText}>Create Account</Text>
+          <Text style={styles.subText}>Sign up to start searching your dream car.</Text>
+        </View>
+
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+            <TextInput 
+              style={styles.input}
+              placeholder="Full Name"
+              placeholderTextColor="#999"
+              value={fullName}
+              onChangeText={setFullName}
+            />
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                value={fullName}
-                onChangeText={setFullName}
-                placeholderTextColor="#999"
-              />
-            </View>
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+            <TextInput 
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#999"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="at-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
-                placeholderTextColor="#999"
-              />
-            </View>
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            <TextInput 
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#999"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <TouchableOpacity 
-              style={styles.signupButton}
-              onPress={() => router.replace('/(tabs)')}
-            >
+          <TouchableOpacity 
+            style={[styles.signupButton, loading && { opacity: 0.7 }]} 
+            onPress={handleSignup}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
               <Text style={styles.signupButtonText}>Sign Up</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.loginContainer}>
+            <Text style={styles.alreadyAccountText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => router.push('/login')}>
+              <Text style={styles.loginLinkText}>Login</Text>
             </TouchableOpacity>
-
-            <View style={styles.loginContainer}>
-              <Text style={styles.alreadyAccountText}>Already have account? </Text>
-              <TouchableOpacity onPress={() => router.back()}>
-                <Text style={styles.loginLinkText}>Login</Text>
-              </TouchableOpacity>
-            </View>
           </View>
-
-          <View style={styles.socialSection}>
-            <Text style={styles.orText}>Or sign up with</Text>
-            <View style={styles.socialButtons}>
-              <TouchableOpacity style={styles.socialCircle}>
-                <Text style={styles.socialText}>G</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialCircle}>
-                <Text style={styles.socialText}>F</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialCircle}>
-                <Text style={styles.socialText}>X</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -112,13 +122,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  scrollContent: {
+  inner: {
+    flex: 1,
     paddingHorizontal: 30,
-    paddingTop: 60,
-    paddingBottom: 40,
+    justifyContent: 'center',
   },
   header: {
     marginBottom: 40,
+  },
+  backBtn: {
+    marginBottom: 20,
+    marginLeft: -10,
   },
   welcomeText: {
     fontSize: 32,
@@ -131,6 +145,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+    fontFamily: 'OpenSans_400Regular',
   },
   form: {
     width: '100%',
@@ -154,6 +169,7 @@ const styles = StyleSheet.create({
     height: '100%',
     color: '#000',
     fontSize: 16,
+    fontFamily: 'OpenSans_400Regular',
   },
   signupButton: {
     backgroundColor: '#F2B705',
@@ -178,41 +194,15 @@ const styles = StyleSheet.create({
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 30,
   },
   alreadyAccountText: {
     color: '#999',
     fontSize: 14,
+    fontFamily: 'OpenSans_400Regular',
   },
   loginLinkText: {
     color: '#333',
-    fontWeight: 'bold',
     fontSize: 14,
-  },
-  socialSection: {
-    alignItems: 'center',
-  },
-  orText: {
-    color: '#666',
-    marginBottom: 20,
-    fontSize: 14,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-  },
-  socialCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  socialText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    fontFamily: 'OpenSans_700Bold',
   },
 });

@@ -1,13 +1,12 @@
-import { StyleSheet, Text, View, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Reduced scale to prevent "K" from cutting on smaller devices
 const scale = SCREEN_WIDTH / 390;
-const FONT_SIZE = 70 * scale; 
+const FONT_SIZE = 70 * scale;
 const LINE_HEIGHT = 80 * scale;
 
 export default function SplashScreen() {
@@ -24,7 +23,7 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      
+
       <View style={styles.logoContainer}>
         {/* Shadow */}
         <Text style={[styles.text, styles.shadowText]}>CARYUK</Text>
@@ -41,28 +40,33 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2B705',
     alignItems: 'center',
     justifyContent: 'center',
+
   },
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    transform: [{ rotate: '-11.88deg' }],
+    transform: [{ rotate: '-11.8deg' }],
+    right: 8,
+    padding: 20, // Prevents bounding box from clipping rotated children
   },
   text: {
     fontFamily: 'OpenSans_800ExtraBold_Italic',
     fontSize: FONT_SIZE,
-    lineHeight: LINE_HEIGHT,
     textAlign: 'center',
     textTransform: 'uppercase',
+    paddingHorizontal: 20, // Extra space for italic overflow
+    paddingVertical: 15, // Extra space for tall letters like K
+    right: 8,
   },
   mainText: {
     color: '#FFFFFF',
     zIndex: 2,
   },
   shadowText: {
-    color: 'rgba(0, 0, 0, 0.1)',
+    color: 'rgba(255, 255, 255, 0.1)',
     zIndex: 1,
     position: 'absolute',
-    top: 5,
-    left: -5,
+    top: 40,
+    left: -8,
   },
 });
