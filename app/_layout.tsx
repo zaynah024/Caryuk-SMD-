@@ -70,7 +70,8 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (loading) return;
-    const segment = segments[0] as string;
+    const segment = segments[0]?.toString() || '';
+    if (!segment) return null; 
     
     // Pages that require the user to be logged in
     const inAuthGroup = segment === '(tabs)' || segment === 'car-detail' || segment === 'payment' || segment === 'cart' || 
